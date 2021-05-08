@@ -11,7 +11,7 @@ const hasOutputFile = access.checkAccess(options.output, "Enter a valid output f
 const makeCipher = (text, action, shift) => {
   let cipherText = ``;
   let cipherLetter;
-  
+
   if (action === 'decode') {
     shift *= -1;
   }
@@ -44,26 +44,43 @@ const transformStream = (action, shift) => {
   });
 };
 
-let readableStream = fs.createReadStream(options.input, "utf8");
-let writeableStream = fs.createWriteStream(options.output);
+const createReadStream = () => {
+  let readableStream;
+  
+  if (typeof options.input === `string`) {
+    readableStream = fs.createReadStream(options.input, "utf8");
+    
+    readableStream.on("error", () => {
+      process.stderr.write("Enter a valid input file name");
+      process.exit(-1);
+    });
+  }
+  return readableStream;
+}
+  
+const createWriteStream = () => {
+  let writeableStream;
 
-readableStream.on("error", () => { 
-  process.stderr.write("Enter a valid input file name");
-  process.exit(-1);
-});
+  if (typeof options.output === `string`) {
+    writeableStream = fs.createWriteStream(options.output);
+  
+    writeableStream.on("error", () => {
+      process.stderr.write("Enter a valid output file name");
+      process.exit(-1);
+    });
+  }
 
-writeableStream.on("error", () => { 
-  process.stderr.write("Enter a valid output file name");
-  process.exit(-1);
-});
+  return writeableStream;
+}
 
 pipeline(
-  hasInputFile ? readableStream : process.stdin,
+  hasInputFile ? createReadStream() : process.stdin,
   transformStream(options.action, options.shift),
-  hasOutputFile ? writeableStream : process.stdout,
+  hasOutputFile ? createWriteStream() : process.stdout,
   (error) => {
     if (error) {
       console.error('Pipeline error:', error);
+      process.exit(-1);
     };
   }
 );

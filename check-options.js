@@ -10,12 +10,12 @@ if (options.shift === undefined) {
   process.exit(-1);
 }
 
-if (typeof options.input !== `string`) {
+if (typeof options.input !== `string` && options.input !== undefined) {
   console.error("Enter a valid input file name");
   process.exit(-1);
 }
 
-if (typeof options.output !== `string`) {
+if (typeof options.output !== `string` && options.output !== undefined) {
   console.error("Enter a valid output file name");
   process.exit(-1);
 }
