@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-module.exports.checkAccess = (fileName) => {
+module.exports.checkAccess = (fileName, errMessage) => {
   try {
     if (fs.existsSync(fileName)) {
       return true;
@@ -8,7 +8,7 @@ module.exports.checkAccess = (fileName) => {
       return false;
     }
   } catch (err) {
-    console.error(err);
-    return false;
+    process.stderr.write(errMessage);
+    process.exit(-1);
   }
 }

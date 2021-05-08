@@ -2,21 +2,19 @@ require('./check-options');
 const fs = require("fs");
 const { pipeline, Transform } = require('stream');
 const options = require('./caesar-cli-options');
-const access = require('./check-access');
+const access = require('./check-file-access');
 
 const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-const hasInputFile = access.checkAccess(options.input);
-const hasOutputFile = access.checkAccess(options.output);
+const hasInputFile = access.checkAccess(options.input, "Enter a valid input file name");
+const hasOutputFile = access.checkAccess(options.output, "Enter a valid output file name");
 
 const makeCipher = (text, action, shift) => {
   let cipherText = ``;
   let cipherLetter;
   
   if (action === 'decode') {
-    console.log(action);
     shift *= -1;
   }
-  console.log(shift);
 
   text.toString().split('').map((symbol) => {
     const shiftLetter = () => {
@@ -46,10 +44,23 @@ const transformStream = (action, shift) => {
   });
 };
 
+let readableStream = fs.createReadStream(options.input, "utf8");
+let writeableStream = fs.createWriteStream(options.output);
+
+readableStream.on("error", () => { 
+  process.stderr.write("Enter a valid input file name");
+  process.exit(-1);
+});
+
+writeableStream.on("error", () => { 
+  process.stderr.write("Enter a valid output file name");
+  process.exit(-1);
+});
+
 pipeline(
-  hasInputFile ? fs.createReadStream("input.txt", "utf8") : process.stdin,
+  hasInputFile ? readableStream : process.stdin,
   transformStream(options.action, options.shift),
-  hasOutputFile ? fs.createWriteStream("output.txt") : process.stdout,
+  hasOutputFile ? writeableStream : process.stdout,
   (error) => {
     if (error) {
       console.error('Pipeline error:', error);
