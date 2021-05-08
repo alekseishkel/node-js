@@ -37,9 +37,10 @@ const makeCipher = (text, action, shift) => {
 
 const transformStream = (action, shift) => {
   return new Transform({
-    transform(chunk) {
+    transform(chunk, _, callback) {
       const text = chunk.toString();
       this.push(makeCipher(text, action, shift));
+      callback();
     }
   });
 };
@@ -55,6 +56,7 @@ const createReadStream = () => {
       process.exit(-1);
     });
   }
+
   return readableStream;
 }
   
@@ -72,11 +74,12 @@ const createWriteStream = () => {
 
   return writeableStream;
 }
+let std = process.stdout;
 
 pipeline(
   hasInputFile ? createReadStream() : process.stdin,
   transformStream(options.action, options.shift),
-  hasOutputFile ? createWriteStream() : process.stdout,
+  hasOutputFile ? createWriteStream() : std,
   (error) => {
     if (error) {
       console.error('Pipeline error:', error);
@@ -84,3 +87,17 @@ pipeline(
     };
   }
 );
+
+// std.on(
+//   pipeline(
+//     hasInputFile ? createReadStream() : std,
+//     transformStream(options.action, options.shift),
+//     hasOutputFile ? createWriteStream() : process.stdout,
+//     (error) => {
+//       if (error) {
+//         console.error('Pipeline error:', error);
+//         process.exit(-1);
+//       };
+//     }
+//   )
+// );
