@@ -1,15 +1,22 @@
+require('./check-options');
 const fs = require("fs");
 const { pipeline, Transform } = require('stream');
 const options = require('./caesar-cli-options');
-const access = require('./chech-access');
+const access = require('./check-access');
 
 const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 const hasInputFile = access.checkAccess(options.input);
 const hasOutputFile = access.checkAccess(options.output);
 
-const makeCipher = (text, shift) => {
+const makeCipher = (text, action, shift) => {
   let cipherText = ``;
   let cipherLetter;
+  
+  if (action === 'decode') {
+    console.log(action);
+    shift *= -1;
+  }
+  console.log(shift);
 
   text.toString().split('').map((symbol) => {
     const shiftLetter = () => {
@@ -30,18 +37,18 @@ const makeCipher = (text, shift) => {
   return cipherText;
 }
 
-const transformStream = (shift) => {
+const transformStream = (action, shift) => {
   return new Transform({
     transform(chunk) {
       const text = chunk.toString();
-      this.push(makeCipher(text, shift));
+      this.push(makeCipher(text, action, shift));
     }
   });
 };
 
 pipeline(
   hasInputFile ? fs.createReadStream("input.txt", "utf8") : process.stdin,
-  transformStream(options.shift),
+  transformStream(options.action, options.shift),
   hasOutputFile ? fs.createWriteStream("output.txt") : process.stdout,
   (error) => {
     if (error) {
