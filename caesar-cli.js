@@ -1,6 +1,7 @@
+const options = require('./caesar-cli-options');
 const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
-const makeCipher = (text, shift) => {
+const makeCipher = (text) => {
   let cipherText = ``;
   let cipherLetter;
 
@@ -9,9 +10,9 @@ const makeCipher = (text, shift) => {
       const letterIndex = alphabet.indexOf(symbol.toLowerCase());
 
       if (symbol === symbol.toUpperCase()) {
-        cipherLetter = alphabet[letterIndex + shift].toUpperCase();
+        cipherLetter = alphabet[letterIndex + options.shift].toUpperCase();
       } else {
-        cipherLetter = alphabet[letterIndex + shift];
+        cipherLetter = alphabet[letterIndex + options.shift];
       }
     };
 
@@ -20,7 +21,7 @@ const makeCipher = (text, shift) => {
     cipherText += cipherLetter;
   });
   console.log(cipherText);
-  
+
   return cipherText;
 }
 
