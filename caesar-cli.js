@@ -1,18 +1,24 @@
+const fs = require("fs");
+const { pipeline, Transform } = require('stream');
 const options = require('./caesar-cli-options');
-const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const access = require('./chech-access');
 
-const makeCipher = (text) => {
+const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const hasInputFile = access.checkAccess(options.input);
+const hasOutputFile = access.checkAccess(options.output);
+
+const makeCipher = (text, shift) => {
   let cipherText = ``;
   let cipherLetter;
 
-  text.split('').map((symbol) => {
+  text.toString().split('').map((symbol) => {
     const shiftLetter = () => {
       const letterIndex = alphabet.indexOf(symbol.toLowerCase());
 
       if (symbol === symbol.toUpperCase()) {
-        cipherLetter = alphabet[letterIndex + options.shift].toUpperCase();
+        cipherLetter = alphabet[letterIndex + shift].toUpperCase();
       } else {
-        cipherLetter = alphabet[letterIndex + options.shift];
+        cipherLetter = alphabet[letterIndex + shift];
       }
     };
 
@@ -20,9 +26,26 @@ const makeCipher = (text) => {
 
     cipherText += cipherLetter;
   });
-  console.log(cipherText);
 
   return cipherText;
 }
 
-makeCipher("123-1c-E/.", -1);
+const transformStream = (shift) => {
+  return new Transform({
+    transform(chunk) {
+      const text = chunk.toString();
+      this.push(makeCipher(text, shift));
+    }
+  });
+};
+
+pipeline(
+  hasInputFile ? fs.createReadStream("input.txt", "utf8") : process.stdin,
+  transformStream(options.shift),
+  hasOutputFile ? fs.createWriteStream("output.txt") : process.stdout,
+  (error) => {
+    if (error) {
+      console.error('Pipeline error:', error);
+    };
+  }
+);
