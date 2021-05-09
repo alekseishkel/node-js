@@ -22,11 +22,21 @@ const makeCipher = (text, action, shift) => {
   text.toString().split('').map((symbol) => {
     const shiftLetter = () => {
       const letterIndex = alphabet.indexOf(symbol.toLowerCase());
+      let cipherLetterIndex = letterIndex + shift;
 
+      if (cipherLetterIndex > 25) {
+        cipherLetterIndex %= 26;
+      }
+
+      if (cipherLetterIndex < 0) {
+        cipherLetterIndex += 26;
+        cipherLetterIndex %= 26;
+      }
+      
       if (symbol === symbol.toUpperCase()) {
-        cipherLetter = alphabet[letterIndex + shift].toUpperCase();
+        cipherLetter = alphabet[cipherLetterIndex].toUpperCase();
       } else {
-        cipherLetter = alphabet[letterIndex + shift];
+        cipherLetter = alphabet[cipherLetterIndex];
       }
     };
 
@@ -39,7 +49,7 @@ const makeCipher = (text, action, shift) => {
 }
 
 const transformStream = (action, shift) => {
-return new Transform({
+  return new Transform({
     transform(chunk, _, callback) {
       const text = chunk.toString();
       this.push(makeCipher(text, action, shift));
@@ -50,10 +60,10 @@ return new Transform({
 
 const createReadStream = () => {
   let readableStream;
-  
+
   if (typeof options.input === `string`) {
     readableStream = fs.createReadStream(options.input, "utf8");
-    
+
     readableStream.on("error", () => {
       process.stderr.write("Enter a valid input file name");
       process.exit(-1);
@@ -62,13 +72,13 @@ const createReadStream = () => {
 
   return readableStream;
 }
-  
+
 const createWriteStream = () => {
   let writeableStream;
 
   if (typeof options.output === `string`) {
-    writeableStream = fs.createWriteStream(options.output);
-  
+    writeableStream = fs.createWriteStream(options.output, { flags: 'a' });
+
     writeableStream.on("error", () => {
       process.stderr.write("Enter a valid output file name");
       process.exit(-1);
