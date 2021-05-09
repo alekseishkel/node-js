@@ -1,8 +1,8 @@
 require('./check-options');
-const fs = require("fs");
 const { pipeline, Transform } = require('stream');
 const options = require('./caesar-cli-options');
 const access = require('./check-file-access');
+const streams = require('./create-streams');
 
 const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 const hasInputFile = access.checkAccess(options.input, "Enter a valid input file name");
@@ -58,40 +58,10 @@ const transformStream = (action, shift) => {
   });
 };
 
-const createReadStream = () => {
-  let readableStream;
-
-  if (typeof options.input === `string`) {
-    readableStream = fs.createReadStream(options.input, "utf8");
-
-    readableStream.on("error", () => {
-      process.stderr.write("Enter a valid input file name");
-      process.exit(-1);
-    });
-  }
-
-  return readableStream;
-}
-
-const createWriteStream = () => {
-  let writeableStream;
-
-  if (typeof options.output === `string`) {
-    writeableStream = fs.createWriteStream(options.output, { flags: 'a' });
-
-    writeableStream.on("error", () => {
-      process.stderr.write("Enter a valid output file name");
-      process.exit(-1);
-    });
-  }
-
-  return writeableStream;
-}
-
 pipeline(
-  hasInputFile ? createReadStream() : process.stdin,
+  hasInputFile ? streams.createReadStream() : process.stdin,
   transformStream(options.action, options.shift),
-  hasOutputFile ? createWriteStream() : process.stdout,
+  hasOutputFile ? streams.createWriteStream() : process.stdout,
   (error) => {
     if (error) {
       console.error('Pipeline error:', error);
