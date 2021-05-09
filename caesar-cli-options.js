@@ -1,6 +1,17 @@
-argv = require('minimist')(process.argv.slice(2));
+const { program } = require('commander');
 
-module.exports.shift = argv.s || argv.shift;
-module.exports.input = argv.i || argv.input;
-module.exports.output = argv.o || argv.output;
-module.exports.action = argv.a || argv.action;
+program
+  .option('-s --shift <shift>', 'a cipher shift')
+  .option('-i --input <file>', 'aninput file')
+  .option('-o --output <file>', 'an output file')
+  .option('-a --action <action>', 'an action encode/decode')
+  .parse(process.argv);
+
+const { shift, input, output, action} = program.opts();
+
+module.exports = {
+  shift,
+  input,
+  output,
+  action
+}

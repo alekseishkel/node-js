@@ -9,8 +9,11 @@ const hasInputFile = access.checkAccess(options.input, "Enter a valid input file
 const hasOutputFile = access.checkAccess(options.output, "Enter a valid output file name");
 
 const makeCipher = (text, action, shift) => {
+
   let cipherText = ``;
   let cipherLetter;
+
+  shift %= 26;
 
   if (action === 'decode') {
     shift *= -1;
@@ -36,7 +39,7 @@ const makeCipher = (text, action, shift) => {
 }
 
 const transformStream = (action, shift) => {
-  return new Transform({
+return new Transform({
     transform(chunk, _, callback) {
       const text = chunk.toString();
       this.push(makeCipher(text, action, shift));
@@ -74,12 +77,11 @@ const createWriteStream = () => {
 
   return writeableStream;
 }
-let std = process.stdout;
 
 pipeline(
   hasInputFile ? createReadStream() : process.stdin,
   transformStream(options.action, options.shift),
-  hasOutputFile ? createWriteStream() : std,
+  hasOutputFile ? createWriteStream() : process.stdout,
   (error) => {
     if (error) {
       console.error('Pipeline error:', error);
@@ -87,17 +89,3 @@ pipeline(
     };
   }
 );
-
-// std.on(
-//   pipeline(
-//     hasInputFile ? createReadStream() : std,
-//     transformStream(options.action, options.shift),
-//     hasOutputFile ? createWriteStream() : process.stdout,
-//     (error) => {
-//       if (error) {
-//         console.error('Pipeline error:', error);
-//         process.exit(-1);
-//       };
-//     }
-//   )
-// );
